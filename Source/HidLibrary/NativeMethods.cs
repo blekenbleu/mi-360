@@ -48,11 +48,11 @@ namespace HidLibrary
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Auto)]
         static internal extern bool CancelSynchronousIo(IntPtr hObject);
 
-	    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+	    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
 	    static internal extern IntPtr CreateEvent(ref SECURITY_ATTRIBUTES securityAttributes, int bManualReset, int bInitialState, string lpName);
 
-	    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-	    static internal extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, int dwShareMode, ref SECURITY_ATTRIBUTES lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, int hTemplateFile);
+	    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+	    static internal extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, int dwShareMode, ref SECURITY_ATTRIBUTES lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         static internal extern bool ReadFile(IntPtr hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
@@ -201,7 +201,7 @@ namespace HidLibrary
 	    static internal extern IntPtr RegisterDeviceNotification(IntPtr hRecipient, IntPtr notificationFilter, Int32 flags);
 
         [DllImport("setupapi.dll")]
-        internal static extern int SetupDiCreateDeviceInfoList(ref Guid classGuid, int hwndParent);
+        internal static extern IntPtr SetupDiCreateDeviceInfoList(ref Guid classGuid, IntPtr hwndParent);
 
 	    [DllImport("setupapi.dll")]
 	    static internal extern int SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
@@ -209,8 +209,8 @@ namespace HidLibrary
 	    [DllImport("setupapi.dll")]
         static internal extern bool SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, ref Guid interfaceClassGuid, int memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
 
-	    [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
-        static internal extern IntPtr SetupDiGetClassDevs(ref System.Guid classGuid, string enumerator, int hwndParent, int flags);
+	    [DllImport("setupapi.dll", CharSet = CharSet.Unicode)]
+        static internal extern IntPtr SetupDiGetClassDevs(ref System.Guid classGuid, string enumerator, IntPtr hwndParent, int flags);
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, EntryPoint = "SetupDiGetDeviceInterfaceDetail")]
         static internal extern bool SetupDiGetDeviceInterfaceDetailBuffer(IntPtr deviceInfoSet, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData, int deviceInterfaceDetailDataSize, ref int requiredSize, IntPtr deviceInfoData);
@@ -294,51 +294,51 @@ namespace HidLibrary
 	    }
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_FlushQueue(IntPtr hidDeviceObject);
+	    static internal extern byte HidD_FlushQueue(IntPtr hidDeviceObject);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_GetAttributes(IntPtr hidDeviceObject, ref HIDD_ATTRIBUTES attributes);
+	    static internal extern byte HidD_GetAttributes(IntPtr hidDeviceObject, ref HIDD_ATTRIBUTES attributes);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_GetFeature(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
+	    static internal extern byte HidD_GetFeature(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_GetInputReport(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
+	    static internal extern byte HidD_GetInputReport(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
 
 	    [DllImport("hid.dll")]
 	    static internal extern void HidD_GetHidGuid(ref Guid hidGuid);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_GetNumInputBuffers(IntPtr hidDeviceObject, ref int numberBuffers);
+	    static internal extern byte HidD_GetNumInputBuffers(IntPtr hidDeviceObject, ref int numberBuffers);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_GetPreparsedData(IntPtr hidDeviceObject, ref IntPtr preparsedData);
+	    static internal extern byte HidD_GetPreparsedData(IntPtr hidDeviceObject, ref IntPtr preparsedData);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_FreePreparsedData(IntPtr preparsedData);
+	    static internal extern byte HidD_FreePreparsedData(IntPtr preparsedData);
 
 	    [DllImport("hid.dll")]
-        static internal extern bool HidD_SetFeature(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
+        static internal extern byte HidD_SetFeature(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
 
 	    [DllImport("hid.dll")]
-	    static internal extern bool HidD_SetNumInputBuffers(IntPtr hidDeviceObject, int numberBuffers);
+	    static internal extern byte HidD_SetNumInputBuffers(IntPtr hidDeviceObject, int numberBuffers);
 
 	    [DllImport("hid.dll")]
-        static internal extern bool HidD_SetOutputReport(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
+        static internal extern byte HidD_SetOutputReport(IntPtr hidDeviceObject, byte[] lpReportBuffer, int reportBufferLength);
 
 	    [DllImport("hid.dll")]
 	    static internal extern int HidP_GetCaps(IntPtr preparsedData, ref HIDP_CAPS capabilities);
 
 	    [DllImport("hid.dll")]
-	    static internal extern int HidP_GetValueCaps(short reportType, ref byte valueCaps, ref short valueCapsLength, IntPtr preparsedData);
+	    static internal extern int HidP_GetValueCaps(int reportType, ref byte valueCaps, ref short valueCapsLength, IntPtr preparsedData);
 
         [DllImport("hid.dll", CharSet = CharSet.Unicode)]
-        internal static extern bool HidD_GetProductString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int ReportBufferLength);
+        internal static extern byte HidD_GetProductString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int ReportBufferLength);
 
         [DllImport("hid.dll", CharSet = CharSet.Unicode)]
-        internal static extern bool HidD_GetManufacturerString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int ReportBufferLength);
+        internal static extern byte HidD_GetManufacturerString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int ReportBufferLength);
 
         [DllImport("hid.dll", CharSet = CharSet.Unicode)]
-        internal static extern bool HidD_GetSerialNumberString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int reportBufferLength);
+        internal static extern byte HidD_GetSerialNumberString(IntPtr hidDeviceObject, ref byte lpReportBuffer, int reportBufferLength);
     }
 }

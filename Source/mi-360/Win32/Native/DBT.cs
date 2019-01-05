@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace mi360.Win32.Native
 {
     public class DBT
-    {
+      {
         #region Contants
 
         public const int WM_DEVICECHANGE = 0x0219; // device state change
@@ -54,9 +54,15 @@ namespace mi360.Win32.Native
         #endregion
 
         #region Methods imports
+        // Do not expose any API directly
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport("user32.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
         public static extern IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags);
+
+//        public static IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags)
+//        {
+//            return RegisterDeviceNotification(unchecked(intPtr), unchecked(notificationFilter), unchecked(flags));
+//        }
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool UnregisterDeviceNotification(IntPtr Handle);

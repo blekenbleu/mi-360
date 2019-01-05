@@ -41,7 +41,7 @@ namespace mi360.Win32.Native
             public UInt32 cbSize;
             public Guid classGuid;
             public UInt32 devInst;
-            public IntPtr reserved;
+            private readonly IntPtr reserved;
         }
 
         [StructLayout(LayoutKind.Sequential)]

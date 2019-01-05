@@ -107,6 +107,7 @@ namespace mi360
             }
             catch (VigemAlreadyConnectedException e)
             {
+                Console.WriteLine("Target {0}: already connected {1}", _Target.ToString(), e.ToString());
                 _Target.Disconnect();
                 _Target.Connect();
             }

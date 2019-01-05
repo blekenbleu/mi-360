@@ -128,7 +128,7 @@ namespace HidLibrary
             {
                 return new HidDeviceData(HidDeviceData.ReadStatus.ReadError);
             }
-            return new HidDeviceData(HidDeviceData.ReadStatus.NotConnected);
+
         }
 
         public void Read(ReadCallback callback)
@@ -188,7 +188,7 @@ namespace HidLibrary
         {
             byte[] cmdBuffer = new byte[Capabilities.InputReportByteLength];
             cmdBuffer[0] = reportId;
-            bool bSuccess = NativeMethods.HidD_GetInputReport(Handle, cmdBuffer, cmdBuffer.Length);
+            bool bSuccess = 0 !=NativeMethods.HidD_GetInputReport(Handle, cmdBuffer, cmdBuffer.Length);
             HidDeviceData deviceData = new HidDeviceData(cmdBuffer, bSuccess ? HidDeviceData.ReadStatus.Success : HidDeviceData.ReadStatus.NoDataRead);
             return new HidReport(Capabilities.InputReportByteLength, deviceData);
         }
@@ -215,7 +215,7 @@ namespace HidLibrary
                 else
                     hidHandle = OpenDeviceIO(_devicePath, NativeMethods.ACCESS_NONE);
 
-                success = NativeMethods.HidD_GetFeature(hidHandle, buffer, buffer.Length);
+                success = 0 !=NativeMethods.HidD_GetFeature(hidHandle, buffer, buffer.Length);
 
                 if (success)
                 {
@@ -247,7 +247,7 @@ namespace HidLibrary
                 else
                     hidHandle = OpenDeviceIO(_devicePath, NativeMethods.ACCESS_NONE);
 
-                success = NativeMethods.HidD_GetProductString(hidHandle, ref data[0], data.Length);
+                success = 0 !=NativeMethods.HidD_GetProductString(hidHandle, ref data[0], data.Length);
             }
             catch (Exception exception)
             {
@@ -274,7 +274,7 @@ namespace HidLibrary
                 else
                     hidHandle = OpenDeviceIO(_devicePath, NativeMethods.ACCESS_NONE);
 
-                success = NativeMethods.HidD_GetManufacturerString(hidHandle, ref data[0], data.Length);
+                success = 0 !=NativeMethods.HidD_GetManufacturerString(hidHandle, ref data[0], data.Length);
             }
             catch (Exception exception)
             {
@@ -301,7 +301,7 @@ namespace HidLibrary
                 else
                     hidHandle = OpenDeviceIO(_devicePath, NativeMethods.ACCESS_NONE);
 
-                success = NativeMethods.HidD_GetSerialNumberString(hidHandle, ref data[0], data.Length);
+                success = 0 !=NativeMethods.HidD_GetSerialNumberString(hidHandle, ref data[0], data.Length);
             }
             catch (Exception exception)
             {
@@ -391,7 +391,7 @@ namespace HidLibrary
             if (null != report)
             {
                 byte[] buffer = report.GetBytes();
-                return (NativeMethods.HidD_SetOutputReport(Handle, buffer, buffer.Length));
+                return (0 !=NativeMethods.HidD_SetOutputReport(Handle, buffer, buffer.Length));
             }
             else
                 throw new ArgumentException("The output report is null, it must be allocated before you call this method", "report");
@@ -427,7 +427,7 @@ namespace HidLibrary
                     hidHandle = OpenDeviceIO(_devicePath, NativeMethods.ACCESS_NONE);
 
                 //var overlapped = new NativeOverlapped();
-                success = NativeMethods.HidD_SetFeature(hidHandle, buffer, buffer.Length);
+                success = 0 !=NativeMethods.HidD_SetFeature(hidHandle, buffer, buffer.Length);
             }
             catch (Exception exception)
             {
@@ -516,7 +516,7 @@ namespace HidLibrary
             var capabilities = default(NativeMethods.HIDP_CAPS);
             var preparsedDataPointer = default(IntPtr);
 
-            if (NativeMethods.HidD_GetPreparsedData(hidHandle, ref preparsedDataPointer))
+            if (0 !=NativeMethods.HidD_GetPreparsedData(hidHandle, ref preparsedDataPointer))
             {
                 NativeMethods.HidP_GetCaps(preparsedDataPointer, ref capabilities);
                 NativeMethods.HidD_FreePreparsedData(preparsedDataPointer);
@@ -610,7 +610,7 @@ namespace HidLibrary
                     {
                         var success = NativeMethods.ReadFile(Handle, nonManagedBuffer, (uint)buffer.Length, out bytesRead, ref overlapped);
 
-                        if (success) 
+                        if (success)
                         {
                             status = HidDeviceData.ReadStatus.Success; // No check here to see if bytesRead > 0 . Perhaps not necessary?
                         }
@@ -618,7 +618,7 @@ namespace HidLibrary
                         {
                             var result = NativeMethods.WaitForSingleObject(overlapped.EventHandle, overlapTimeout);
 
-                            switch (result) 
+                            switch (result)
                             {
                                 case NativeMethods.WAIT_OBJECT_0:
                                     status = HidDeviceData.ReadStatus.Success;
@@ -629,7 +629,7 @@ namespace HidLibrary
                                     NativeMethods.CancelIo(Handle);
                                     buffer = new byte[] { };
                                     break;
-                            case NativeMethods.WAIT_FAILED:
+                                case NativeMethods.WAIT_FAILED:
                                     status = HidDeviceData.ReadStatus.WaitFail;
                                     buffer = new byte[] { };
                                     break;
@@ -642,7 +642,8 @@ namespace HidLibrary
                         Marshal.Copy(nonManagedBuffer, buffer, 0, (int)bytesRead);
                     }
                     catch { status = HidDeviceData.ReadStatus.ReadError; }
-                    finally {
+                    finally
+                    {
                         CloseDeviceIO(overlapped.EventHandle);
                         Marshal.FreeHGlobal(nonManagedBuffer);
                     }
@@ -680,7 +681,7 @@ namespace HidLibrary
             security.bInheritHandle = true;
             security.nLength = Marshal.SizeOf(security);
 
-            return NativeMethods.CreateFile(devicePath, deviceAccess, (int)shareMode, ref security, NativeMethods.OPEN_EXISTING, flags, 0);
+            return NativeMethods.CreateFile(devicePath, deviceAccess, (int)shareMode, ref security, NativeMethods.OPEN_EXISTING, flags, IntPtr.Zero);
         }
 
         private static void CloseDeviceIO(IntPtr handle)
@@ -703,11 +704,36 @@ namespace HidLibrary
             if (IsOpen) CloseDevice();
             if (Removed != null) Removed();
         }
-
+        // Implement IDisposable. 
+        // Do not make this method virtual. 
+        // A derived class should not be able to override this method.
         public void Dispose()
         {
-            if (MonitorDeviceEvents) MonitorDeviceEvents = false;
-            if (IsOpen) CloseDevice();
+            Dispose(true);
+            // This object will be cleaned up by the Dispose method. 
+            // Therefore, you should call GC.SupressFinalize to 
+            // take this object off the finalization queue 
+            // and prevent finalization code for this object 
+            // from executing a second time.
+            GC.SuppressFinalize(this);
+        }
+
+        // Dispose(bool disposing) executes in two distinct scenarios. 
+        // If disposing equals true, the method has been called directly 
+        // or indirectly by a user's code. Managed and unmanaged resources 
+        // can be disposed. 
+        // If disposing equals false, the method has been called by the 
+        // runtime from inside the finalizer and you should not reference 
+        // other objects. Only unmanaged resources can be disposed. 
+        protected virtual void Dispose(bool disposing)
+        {
+            // If disposing equals true,
+            // dispose all managed and unmanaged resources. 
+            if (disposing)
+            {
+                if (MonitorDeviceEvents) MonitorDeviceEvents = false;
+                if (IsOpen) CloseDevice();
+            }
         }
     }
 }

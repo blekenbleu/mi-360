@@ -81,15 +81,15 @@ namespace mi360.Win32
 
                 SetupDiGetDeviceRegistryPropertyW(info, ref devdata, propId, out proptype, buffer, buflen, ref outsize);
 
-                byte[] lbuffer = new byte[outsize];
-                Marshal.Copy(buffer, lbuffer, 0, (int) outsize);
-
                 int errcode = Marshal.GetLastWin32Error();
 
                 if (errcode == ERROR_INVALID_DATA)
                     return null;
 
                 CheckError("SetupDiGetDeviceProperty", errcode);
+
+                byte[] lbuffer = new byte[outsize];
+                Marshal.Copy(buffer, lbuffer, 0, (int) outsize);
                 return Encoding.Unicode.GetString(lbuffer);
             }
             finally
