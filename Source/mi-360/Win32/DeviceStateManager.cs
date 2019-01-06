@@ -24,11 +24,8 @@ namespace mi360.Win32
                 // Get first device matching device criterion.
                 for (uint i = 0;; i++)
                 {
+                    // if no items match filter, throws
                     SetupDiEnumDeviceInfo(info, i, out devdata);
-                    // if no items match filter, throw
-                    if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
-                        CheckError("No device found matching filter.", 0xcffff);
-                    CheckError("SetupDiEnumDeviceInfo");
 
                     string devicepath = GetStringPropertyForDevice(info, devdata, 1); // SPDRP_HARDWAREID
 
@@ -81,12 +78,8 @@ namespace mi360.Win32
 
                 SetupDiGetDeviceRegistryPropertyW(info, ref devdata, propId, out proptype, buffer, buflen, ref outsize);
 
-                int errcode = Marshal.GetLastWin32Error();
-
-                if (errcode == ERROR_INVALID_DATA)
+                if (0 == outsize)
                     return null;
-
-                CheckError("SetupDiGetDeviceProperty", errcode);
 
                 byte[] lbuffer = new byte[outsize];
                 Marshal.Copy(buffer, lbuffer, 0, (int) outsize);
