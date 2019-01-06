@@ -68,19 +68,19 @@ namespace mi360.Win32.Native
             IntPtr parent,
             UInt32 flagsa)
         {
-            return SetupDiGetClassDevsW(ref ClassGuid, Enumerator, parent, flagsa);
+            return NativeMethods.SetupDiGetClassDevsW(ref ClassGuid, Enumerator, parent, flagsa);
         }
 
         public static bool SetupDiDestroyDeviceInfoList(IntPtr handle)
         {
-            return SetupDiDestroyDeviceInfoList(handle);
+            return NativeMethods.SetupDiDestroyDeviceInfoList(handle);
         }
 
         public static bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet,
             UInt32 memberIndex,
             [Out] out SP_DEVINFO_DATA deviceInfoData)
         {
-            bool foo = SetupDiEnumDeviceInfo(deviceInfoSet, memberIndex, out deviceInfoData);
+            bool foo = NativeMethods.SetupDiEnumDeviceInfo(deviceInfoSet, memberIndex, out deviceInfoData);
             if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
                 CheckError("No device found matching filter.", 0xcffff);
             CheckError("SetupDiEnumDeviceInfo");
@@ -93,7 +93,7 @@ namespace mi360.Win32.Native
             [In] ref SP_PROPCHANGE_PARAMS classInstallParams,
             UInt32 ClassInstallParamsSize)
         {
-            return SetupDiSetClassInstallParams(deviceInfoSet, ref deviceInfoData,
+            return NativeMethods.SetupDiSetClassInstallParams(deviceInfoSet, ref deviceInfoData,
                   ref classInstallParams, ClassInstallParamsSize);
         }
 
@@ -101,7 +101,7 @@ namespace mi360.Win32.Native
             IntPtr deviceInfoSet,
             [In] ref SP_DEVINFO_DATA deviceInfoData)
         {
-            return SetupDiChangeState(deviceInfoSet, ref deviceInfoData);
+            return NativeMethods.SetupDiChangeState(deviceInfoSet, ref deviceInfoData);
         }
 
         public static bool SetupDiGetDevicePropertyW(
@@ -114,7 +114,7 @@ namespace mi360.Win32.Native
             out UInt32 requiredSize,
             UInt32 flags)
         {
-            return SetupDiGetDevicePropertyW(deviceInfoSet,
+            return NativeMethods.SetupDiGetDevicePropertyW(deviceInfoSet,
                 ref DeviceInfoData, ref propertyKey,
                   out propertyType, propertyBuffer, propertyBufferSize,
                   out requiredSize, flags);              
@@ -129,7 +129,7 @@ namespace mi360.Win32.Native
             UInt32 PropertyBufferSize,
             [In, Out] ref UInt32 RequiredSize)
         {
-            bool foo = SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
+            bool foo = NativeMethods.SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
                 ref DeviceInfoData,
                 Property, out PropertyRegDataType, PropertyBuffer,
                 PropertyBufferSize, ref RequiredSize);
@@ -150,83 +150,49 @@ namespace mi360.Win32.Native
             ref SP_DEVINFO_DATA DeviceInfoData
         )
         {
-            return SetupDiCallClassInstaller(InstallFunction,
+            return NativeMethods.SetupDiCallClassInstaller(InstallFunction,
                 DeviceInfoSet, ref DeviceInfoData);
         }
         #endregion
     }
 
         #region Methods imports
-    internal static class SetupApiNativeMethods
+
+    internal static partial class NativeMethods
     {
-        #region Structures
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SP_CLASSINSTALL_HEADER
-        {
-            public UInt32 cbSize;
-            public UInt32 InstallFunction;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SP_PROPCHANGE_PARAMS
-        {
-            public SP_CLASSINSTALL_HEADER ClassInstallHeader;
-            public UInt32 StateChange;
-            public UInt32 Scope;
-            public UInt32 HwProfile;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SP_DEVINFO_DATA
-        {
-            public UInt32 cbSize;
-            public Guid classGuid;
-            public UInt32 devInst;
-            private readonly IntPtr reserved;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct DEVPROPKEY
-        {
-            public Guid fmtid;
-            public UInt32 pid;
-        }
-
-        #endregion
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern IntPtr SetupDiGetClassDevsW(
+        internal static extern IntPtr SetupDiGetClassDevsW(
             [In] ref Guid ClassGuid,
             [MarshalAs(UnmanagedType.LPWStr)] string Enumerator,
             IntPtr parent,
             UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiDestroyDeviceInfoList(IntPtr handle);
+        internal static extern bool SetupDiDestroyDeviceInfoList(IntPtr handle);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet,
+        internal static extern bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet,
             UInt32 memberIndex,
-            [Out] out SP_DEVINFO_DATA deviceInfoData);
+            [Out] out SetupApi.SP_DEVINFO_DATA deviceInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiSetClassInstallParams(
+        internal static extern bool SetupDiSetClassInstallParams(
             IntPtr deviceInfoSet,
-            [In] ref SP_DEVINFO_DATA deviceInfoData,
-            [In] ref SP_PROPCHANGE_PARAMS classInstallParams,
+            [In] ref SetupApi.SP_DEVINFO_DATA deviceInfoData,
+            [In] ref SetupApi.SP_PROPCHANGE_PARAMS classInstallParams,
             UInt32 ClassInstallParamsSize);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiChangeState(
+        internal static extern bool SetupDiChangeState(
             IntPtr deviceInfoSet,
-            [In] ref SP_DEVINFO_DATA deviceInfoData);
+            [In] ref SetupApi.SP_DEVINFO_DATA deviceInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiGetDevicePropertyW(
+        internal static extern bool SetupDiGetDevicePropertyW(
             IntPtr deviceInfoSet,
-            [In] ref SP_DEVINFO_DATA DeviceInfoData,
-            [In] ref DEVPROPKEY propertyKey,
+            [In] ref SetupApi.SP_DEVINFO_DATA DeviceInfoData,
+            [In] ref SetupApi.DEVPROPKEY propertyKey,
             [Out] out UInt32 propertyType,
             IntPtr propertyBuffer,
             UInt32 propertyBufferSize,
@@ -234,9 +200,9 @@ namespace mi360.Win32.Native
             UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiGetDeviceRegistryPropertyW(
+        internal static extern bool SetupDiGetDeviceRegistryPropertyW(
             IntPtr DeviceInfoSet,
-            [In] ref SP_DEVINFO_DATA DeviceInfoData,
+            [In] ref SetupApi.SP_DEVINFO_DATA DeviceInfoData,
             UInt32 Property,
             [Out] out UInt32 PropertyRegDataType,
             IntPtr PropertyBuffer,
@@ -244,11 +210,12 @@ namespace mi360.Win32.Native
             [In, Out] ref UInt32 RequiredSize);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        private static extern bool SetupDiCallClassInstaller(
+        internal static extern bool SetupDiCallClassInstaller(
             UInt32 InstallFunction,
             IntPtr DeviceInfoSet,
-            ref SP_DEVINFO_DATA DeviceInfoData
+            ref SetupApi.SP_DEVINFO_DATA DeviceInfoData
         );
+
         #endregion
     }
 }

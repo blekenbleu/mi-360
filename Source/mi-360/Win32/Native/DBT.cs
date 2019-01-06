@@ -57,27 +57,27 @@ namespace mi360.Win32.Native
         // Do not expose any API directly
 
 
-        public static IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags)
+        internal static IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags)
         {
-            return RegisterDeviceNotification(intPtr, notificationFilter, flags);
+            return NativeMethods.RegisterDeviceNotification(intPtr, notificationFilter, flags);
         }
 
-        public static bool UnregisterDeviceNotification(IntPtr Handle)
+        internal static bool UnregisterDeviceNotification(IntPtr Handle)
         {
-            return UnregisterDeviceNotification(Handle);
+            return NativeMethods.UnregisterDeviceNotification(Handle);
         }
 
         #endregion
     }
 
         #region Methods imports
-    internal static class Win32NativeMethods
+    internal static partial class NativeMethods
     {
         [DllImport("user32.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
-        private static extern IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags);
+        internal static extern IntPtr RegisterDeviceNotification(IntPtr intPtr, IntPtr notificationFilter, uint flags);
 
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool UnregisterDeviceNotification(IntPtr Handle);
+        internal static extern bool UnregisterDeviceNotification(IntPtr Handle);
     }
         #endregion
 }
