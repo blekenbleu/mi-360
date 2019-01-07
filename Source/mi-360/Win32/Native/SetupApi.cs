@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace mi360.Win32.Native
 {
@@ -68,7 +69,15 @@ namespace mi360.Win32.Native
             IntPtr parent,
             UInt32 flagsa)
         {
-            return NativeMethods.SetupDiGetClassDevsW(ref ClassGuid, Enumerator, parent, flagsa);
+            System.StackOverflowException ex = null;
+            try {
+                return NativeMethods.SetupDiGetClassDevsW(ref ClassGuid, Enumerator, parent, flagsa);
+            } catch(System.StackOverflowException e) {
+                ex = e;
+                System.Windows.Forms.MessageBox.Show("SetupDiGetClassDevsW()",
+                        ex.ToString(), System.Windows.Forms.MessageBoxButtons.OK, MessageBoxIcon.Warning);  
+            }
+            return IntPtr.Zero;
         }
 
         public static bool SetupDiDestroyDeviceInfoList(IntPtr handle)
@@ -76,15 +85,25 @@ namespace mi360.Win32.Native
             return NativeMethods.SetupDiDestroyDeviceInfoList(handle);
         }
 
+        // SetupDiEnumDeviceInfo() is used ONLY by DeviceStateManager()
+        // 3 states: real = true, real = false and continue, real = false and quit
         public static bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet,
-            UInt32 memberIndex,
-            [Out] out SP_DEVINFO_DATA deviceInfoData)
+            UInt32 memberIndex, [Out] out SP_DEVINFO_DATA deviceInfoData)
         {
-            bool foo = NativeMethods.SetupDiEnumDeviceInfo(deviceInfoSet, memberIndex, out deviceInfoData);
-            if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
-                CheckError("No device found matching filter.", 0xcffff);
-            CheckError("SetupDiEnumDeviceInfo");
-            return foo;
+            bool real = NativeMethods.SetupDiEnumDeviceInfo(deviceInfoSet, memberIndex, out deviceInfoData);
+            if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS) {
+                real = false;  // no real gamepad found
+
+                System.Windows.Forms.DialogResult res = System.Windows.Forms.MessageBox.Show("OK to continue without gamepad?",
+                        "Gamepad NOT found", System.Windows.Forms.MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+
+                if (res != DialogResult.OK)
+                    deviceInfoData.cbSize = 0;  // quit
+            }
+            else {
+                CheckError("SetupDiEnumDeviceInfo");
+            }
+            return real;
         }
 
         public static bool SetupDiSetClassInstallParams(

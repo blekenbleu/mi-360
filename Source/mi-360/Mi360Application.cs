@@ -12,12 +12,13 @@ namespace mi360
 {
     class Mi360Application : ApplicationContext
     {
-        private static string XiaomiGamepadHardwareId = @"HID\{00001124-0000-1000-8000-00805f9b34fb}_VID&00022717_PID&3144";
+        private static readonly string XiaomiGamepadHardwareId = @"HID\{00001124-0000-1000-8000-00805f9b34fb}_VID&00022717_PID&3144";
         private static string XiaomiGamepadHardwareFilter = @"VID&00022717_PID&3144";
 
         private NotifyIcon _NotifyIcon;
         private IMonitor _Monitor;
         private XInputManager _Manager;
+        private bool _RealXi;
 
         public Mi360Application()
         {
@@ -25,16 +26,19 @@ namespace mi360
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            EnableHidGuardian();
+            // returns true to contine
+            if (EnableHidGuardian())
+            {
+                _Manager = new XInputManager();
+                _Manager.GamepadRunning += Manager_GamepadRunning;
+                _Manager.GamepadRemoved += Manager_GamepadRemoved;
 
-            _Manager = new XInputManager();
-            _Manager.GamepadRunning += Manager_GamepadRunning;
-            _Manager.GamepadRemoved += Manager_GamepadRemoved;
-
-            _Monitor = new HidMonitor(XiaomiGamepadHardwareFilter);
-            _Monitor.DeviceAttached += Monitor_DeviceAttached;
-            _Monitor.DeviceRemoved += Monitor_DeviceRemoved;
-            _Monitor.Start();
+                _Monitor = new HidMonitor(XiaomiGamepadHardwareFilter);
+                _Monitor.DeviceAttached += Monitor_DeviceAttached;
+                _Monitor.DeviceRemoved += Monitor_DeviceRemoved;
+                _Monitor.Start();
+            } else
+                Application.Exit();  // user opted out
         }
 
         #region Initialization/Cleanup methods
@@ -42,6 +46,8 @@ namespace mi360
         private void InitializeComponents()
         {
             Application.ApplicationExit += Application_ApplicationExit;
+
+            _RealXi = false;
 
             _NotifyIcon = new NotifyIcon()
             {
@@ -81,7 +87,8 @@ namespace mi360
 
         #region Hardware utilities
 
-        private void EnableHidGuardian()
+        // returns true to continue
+        private bool EnableHidGuardian()
         {
             // Temp
             HidGuardian.ClearWhitelistedProcesses();
@@ -91,7 +98,10 @@ namespace mi360
             HidGuardian.AddToWhitelist(Process.GetCurrentProcess().Id);
 
             // Disable and reenable the device to let the driver hide the HID gamepad and show Xbox360 one
-            DeviceStateManager.DisableReEnableDevice(XiaomiGamepadHardwareId);
+            string filter = XiaomiGamepadHardwareId;
+            // returns true for real gamepads;  null filter if quit
+            _RealXi = DeviceStateManager.DisableReEnableDevice(ref filter);
+            return (null != filter);  // to continue
         }
 
         private void DisableHidGuardian()
@@ -99,8 +109,12 @@ namespace mi360
             HidGuardian.RemoveDeviceFromAffectedList(XiaomiGamepadHardwareId);
             HidGuardian.RemoveFromWhitelist(Process.GetCurrentProcess().Id);
 
-            // Disable and reenable the device to let the driver hide the emulated gamepad and show the HID one again
-            DeviceStateManager.DisableReEnableDevice(XiaomiGamepadHardwareId);
+            if (_RealXi)
+            {
+                // Disable and reenable the device to let the driver hide the emulated gamepad and show the HID one again
+                string id = XiaomiGamepadHardwareId;
+                DeviceStateManager.DisableReEnableDevice(ref id);
+            }
         }
 
         #endregion
@@ -156,16 +170,17 @@ namespace mi360
         {
             var lines = new List<string> { "Xiaomi Gamepad XInput manager" };
 
-            foreach (var s in _Manager.DeviceStatus)
-            {
-                if (s.Key > 4)
-                    continue;
+            if (null != _Manager)
+                foreach (var s in _Manager.DeviceStatus)
+                {
+                    if (s.Key > 4)
+                        continue;
 
-                var led = $"{ new string('\u25CB', s.Key) }\u25C9{ new string('\u25CB', 3 - s.Key) }";
-                var batt = s.Value > 0 ? $"{ s.Value }%" : "N/A";
+                    var led = $"{ new string('\u25CB', s.Key) }\u25C9{ new string('\u25CB', 3 - s.Key) }";
+                    var batt = s.Value > 0 ? $"{ s.Value }%" : "N/A";
 
-                lines.Add($"{ led } - Battery { batt }");
-            }
+                    lines.Add($"{ led } - Battery { batt }");
+                }
 
             _NotifyIcon.Text = String.Join(Environment.NewLine, lines);
         }
