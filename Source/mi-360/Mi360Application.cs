@@ -31,6 +31,7 @@ namespace mi360
             if (EnableHidGuardian())
             {
                 _Manager = new XInputManager();
+                if (_Manager.Quit)
                 {
                     Application.Exit();  // user opted out
                     return;
