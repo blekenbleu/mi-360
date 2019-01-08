@@ -696,14 +696,15 @@ namespace HidLibrary
         private void DeviceEventMonitorInserted()
         {
             if (!IsOpen) OpenDevice(_deviceReadMode, _deviceWriteMode, _deviceShareMode);
-            if (Inserted != null) Inserted();
+            Inserted?.Invoke();
         }
 
         private void DeviceEventMonitorRemoved()
         {
             if (IsOpen) CloseDevice();
-            if (Removed != null) Removed();
+            Removed?.Invoke();
         }
+
         // Implement IDisposable. 
         // Do not make this method virtual. 
         // A derived class should not be able to override this method.
@@ -720,8 +721,8 @@ namespace HidLibrary
 
         // Dispose(bool disposing) executes in two distinct scenarios. 
         // If disposing equals true, the method has been called directly 
-        // or indirectly by a user's code. Managed and unmanaged resources 
-        // can be disposed. 
+        // or indirectly by a user's code.
+        // Managed and unmanaged resources can be disposed. 
         // If disposing equals false, the method has been called by the 
         // runtime from inside the finalizer and you should not reference 
         // other objects. Only unmanaged resources can be disposed. 

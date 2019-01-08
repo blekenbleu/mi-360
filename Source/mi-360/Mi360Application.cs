@@ -14,11 +14,12 @@ namespace mi360
     {
         private static readonly string XiaomiGamepadHardwareId = @"HID\{00001124-0000-1000-8000-00805f9b34fb}_VID&00022717_PID&3144";
         private static string XiaomiGamepadHardwareFilter = @"VID&00022717_PID&3144";
+        private static bool _RealXi = false;    // Override missing gamepad
 
         private NotifyIcon _NotifyIcon;
         private IMonitor _Monitor;
         private XInputManager _Manager;
-        private bool _RealXi;
+        private System.ComponentModel.IContainer components;
 
         public Mi360Application()
         {
@@ -30,6 +31,10 @@ namespace mi360
             if (EnableHidGuardian())
             {
                 _Manager = new XInputManager();
+                {
+                    Application.Exit();  // user opted out
+                    return;
+                } 
                 _Manager.GamepadRunning += Manager_GamepadRunning;
                 _Manager.GamepadRemoved += Manager_GamepadRemoved;
 
@@ -46,10 +51,11 @@ namespace mi360
         private void InitializeComponents()
         {
             Application.ApplicationExit += Application_ApplicationExit;
+            components = new System.ComponentModel.Container();
 
             _RealXi = false;
 
-            _NotifyIcon = new NotifyIcon()
+            _NotifyIcon = new NotifyIcon(components)
             {
                 Icon = Resources.ApplicationIcon,
                 Visible = true,
@@ -72,6 +78,9 @@ namespace mi360
             _Monitor.Dispose();
 
             _Manager.Dispose();
+            if (disposing)
+                if (components != null)
+                    components.Dispose();
 
             base.Dispose(disposing);
         }
@@ -94,23 +103,26 @@ namespace mi360
             HidGuardian.ClearWhitelistedProcesses();
             HidGuardian.ClearAffectedDevices();
 
-            HidGuardian.AddDeviceToAffectedList(XiaomiGamepadHardwareId);
             HidGuardian.AddToWhitelist(Process.GetCurrentProcess().Id);
 
             // Disable and reenable the device to let the driver hide the HID gamepad and show Xbox360 one
             string filter = XiaomiGamepadHardwareId;
             // returns true for real gamepads;  null filter if quit
             _RealXi = DeviceStateManager.DisableReEnableDevice(ref filter);
+
+            if (_RealXi)
+                HidGuardian.AddDeviceToAffectedList(XiaomiGamepadHardwareId);
+
             return (null != filter);  // to continue
         }
 
         private void DisableHidGuardian()
         {
-            HidGuardian.RemoveDeviceFromAffectedList(XiaomiGamepadHardwareId);
             HidGuardian.RemoveFromWhitelist(Process.GetCurrentProcess().Id);
 
             if (_RealXi)
             {
+                HidGuardian.RemoveDeviceFromAffectedList(XiaomiGamepadHardwareId);
                 // Disable and reenable the device to let the driver hide the emulated gamepad and show the HID one again
                 string id = XiaomiGamepadHardwareId;
                 DeviceStateManager.DisableReEnableDevice(ref id);
@@ -168,9 +180,10 @@ namespace mi360
 
         private void _NotifyIcon_MouseMove(object sender, MouseEventArgs e)
         {
-            var lines = new List<string> { "Xiaomi Gamepad XInput manager" };
-
             if (null != _Manager)
+            {
+                var lines = new List<string> { "Xiaomi Gamepad XInput manager" };
+
                 foreach (var s in _Manager.DeviceStatus)
                 {
                     if (s.Key > 4)
@@ -182,9 +195,9 @@ namespace mi360
                     lines.Add($"{ led } - Battery { batt }");
                 }
 
-            _NotifyIcon.Text = String.Join(Environment.NewLine, lines);
+                _NotifyIcon.Text = String.Join(Environment.NewLine, lines);
+            }
         }
-
         #endregion
     }
 }

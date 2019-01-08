@@ -10,6 +10,7 @@ namespace mi360.Win32
         #region Constants & Fields
 
         private const string HIDClassID = "4D1E55B2-F16F-11CF-88CB-001111000030";
+        private static CreateParams cp = new CreateParams { Parent = (IntPtr)(-3) };
 
         public event EventHandler<string> DeviceAttached;
         public event EventHandler<string> DeviceRemoved;
@@ -20,8 +21,7 @@ namespace mi360.Win32
 
         public DeviceMonitor()
         {
-            var cp = new CreateParams { Parent = (IntPtr) (-3) };
-            CreateHandle(cp);
+            CreateHandle(cp);  // CA2214 
         }
 
         #endregion

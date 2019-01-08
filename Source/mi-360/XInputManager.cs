@@ -12,13 +12,28 @@ namespace mi360
     {
         public event EventHandler GamepadRunning;
         public event EventHandler GamepadRemoved;
+        public bool Real = true, Quit = false;
 
         private Dictionary<string, MiGamepad> _Gamepads;
         private ViGEmClient _ViGEmClient;
 
         public XInputManager()
         {
-            _ViGEmClient = new ViGEmClient();
+            try
+            {
+                _ViGEmClient = new ViGEmClient();
+            } catch(Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException e)
+            {
+                Exception ex = e;
+                System.Windows.Forms.DialogResult res =
+                System.Windows.Forms.MessageBox.Show("Press OK to continue, Cancel to quit",
+                        "XInputManager(): Missing ViGEm",
+                        System.Windows.Forms.MessageBoxButtons.OKCancel,
+                        System.Windows.Forms.MessageBoxIcon.Warning);
+                Real = false;
+                Quit = (res != System.Windows.Forms.DialogResult.OK);
+            }
+
             _Gamepads = new Dictionary<string, MiGamepad>();
         }
 
@@ -35,6 +50,7 @@ namespace mi360
 
             _ViGEmClient.Dispose();
         }
+
 
         public Dictionary<ushort, ushort> DeviceStatus => _Gamepads.ToDictionary(g => g.Value.LedNumber, g => g.Value.BatteryLevel);
 

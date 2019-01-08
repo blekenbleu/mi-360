@@ -10,8 +10,8 @@ namespace mi360
 {
     public static class HidGuardian
     {
-        private static string HidGuardianRegistryKeyBase = @"SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters";
-        private static string HidWhitelistRegistryKeyBase = $"{HidGuardianRegistryKeyBase}\\Whitelist";
+        private static readonly string HidGuardianRegistryKeyBase = @"SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters";
+        private static readonly string HidWhitelistRegistryKeyBase = $"{HidGuardianRegistryKeyBase}\\Whitelist";
 
         private static readonly Regex HardwareIdRegex =
             new Regex(@"HID\\[{(]?[0-9A-Fa-z]{8}[-]?([0-9A-Fa-z]{4}[-]?){3}[0-9A-Fa-z]{12}[)}]?|HID\\VID_[a-zA-Z0-9]{4}&PID_[a-zA-Z0-9]{4}");
